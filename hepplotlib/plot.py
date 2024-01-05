@@ -1,4 +1,3 @@
-from functools import cached_property
 from dataclasses import dataclass
 import operator
 import numpy as np
@@ -15,15 +14,15 @@ class StatError:
     y: NDArray
     yerr: NDArray
 
-    @cached_property
+    @property
     def ylow(self) -> NDArray:
         return self.y - self.yerr
 
-    @cached_property
+    @property
     def yup(self) -> NDArray:
         return self.y + self.yerr
 
-    @cached_property
+    @property
     def edges(self) -> NDArray:
         zipped = zip(self.x, self.xerr)
         op_list = [operator.sub, operator.add]
@@ -89,8 +88,8 @@ class Ratio1D:
 
 
 @dataclass
-class Ratio1DStatError:
-    x_edges: NDArray
+class RatioStatError1D:
+    edges: NDArray
     yerr: NDArray
 
     @property
@@ -102,10 +101,10 @@ class Ratio1DStatError:
         return 1 + self.yerr
 
     @classmethod
-    def from_hist(cls, hist: Hist) -> 'RatioStatError':
-        x_edges = hist.axes[0].edges
+    def from_hist(cls, hist: Hist) -> 'RatioStatError1D':
+        edges = hist.axes[0].edges
         yerr = np.sqrt(hist.variances()) / hist.values()
-        return cls(x_edges=x_edges, yerr=yerr)
+        return cls(edges=edges, yerr=yerr)
 
     def fill_between(self,
                      ax: plt.Axes | None = None,
@@ -115,7 +114,7 @@ class Ratio1DStatError:
     ):
         ax = ax or plt.gca()
 
-        x = np.repeat(self.x_edges, 2)[1:-1]
+        x = np.repeat(self.edges, 2)[1:-1]
         ylow = np.repeat(self.ylow, 2)
         yup = np.repeat(self.yup, 2)
 
@@ -147,11 +146,11 @@ class Efficiency1D:
         xerr = h_den.axes[0].widths
         return cls(x, y, ylow, yup, xerr=xerr)
 
-    @cached_property
+    @property
     def yerr_low(self) -> NDArray:
         return self.y - self.ylow
 
-    @cached_property
+    @property
     def yerr_up(self) -> NDArray:
         return self.yup - self.y
 
